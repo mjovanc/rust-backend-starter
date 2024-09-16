@@ -4,6 +4,7 @@ use actix_web::web::{Data, Json, Path, Query, ServiceConfig};
 use rusqlite::Connection;
 use serde::Deserialize;
 use log::{error, info};
+use crate::db::application_db::get_by_id;
 use crate::db::user_db;
 use crate::models::{User, UserStore};
 use crate::models::user::UserUpdateRequest;
@@ -19,8 +20,11 @@ pub(crate) fn configure(store: Data<UserStore>) -> impl FnOnce(&mut ServiceConfi
     move |config: &mut ServiceConfig| {
         config
             .app_data(store)
-            .service(get_users);
-        // Add other services as needed
+            .service(get_users)
+            .service(get_user_by_id)
+            .service(create_user)
+            .service(update_user)
+            .service(delete_user);
     }
 }
 
@@ -30,6 +34,8 @@ pub(crate) fn configure(store: Data<UserStore>) -> impl FnOnce(&mut ServiceConfi
 ///
 /// List users from the database with pagination support.
 #[utoipa::path(
+    context_path = "/v1",
+    tag = "users",
     params(
         ("limit" = Option<usize>, Query, description = "Maximum number of items to return", example = 10),
         ("offset" = Option<usize>, Query, description = "Offset for pagination", example = 0),
@@ -89,6 +95,8 @@ pub(super) async fn get_users(query: Query<UserQuery>) -> impl Responder {
 ///
 /// Return found `User` with status 200 or 404 not found if `User` is not found from the database.
 #[utoipa::path(
+    context_path = "/v1",
+    tag = "users",
     params(
         ("id", description = "Unique ID of the user", example = 1)
     ),
@@ -122,6 +130,8 @@ pub(super) async fn get_user_by_id(id: Path<i64>) -> impl Responder {
 /// Create a new `User` in the database.
 #[utoipa::path(
     request_body = User,
+    context_path = "/v1",
+    tag = "users",
     responses(
         (status = 201, description = "User created successfully", body = User),
         (status = 401, description = "Unauthorized to create user", body = ErrorResponse, example = json!(ErrorResponse::Unauthorized(String::from("missing api key")))),
@@ -168,6 +178,8 @@ pub(super) async fn create_user(user: Json<UserUpdateRequest>) -> impl Responder
 ///
 /// Update an existing `User` in the database.
 #[utoipa::path(
+context_path = "/v1",
+    tag = "users",
     params(
         ("id", description = "Unique ID of the user", example = 1)
     ),
@@ -239,6 +251,8 @@ pub(super) async fn update_user(
 ///
 /// Delete the `User` from the database.
 #[utoipa::path(
+    context_path = "/v1",
+    tag = "users",
     params(
         ("id", description = "Unique ID of the user", example = 1)
     ),

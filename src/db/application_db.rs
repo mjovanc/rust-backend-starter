@@ -2,6 +2,7 @@ use crate::models::{Application, ApplicationStatus};
 use log::{debug, error};
 use rusqlite::{params, Connection};
 use std::error::Error;
+use actix_web::web::Json;
 use chrono::{DateTime, Utc};
 use crate::models::application::ApplicationUpdateRequest;
 
@@ -83,7 +84,7 @@ pub fn get_by_id(conn: &mut Connection, id: i64) -> Result<Option<Application>, 
     }
 }
 
-pub fn update(conn: &mut Connection, id: i64, application: ApplicationUpdateRequest) -> Result<(), Box<dyn Error>> {
+pub fn update(conn: &mut Connection, id: i64, application: Application) -> Result<(), Box<dyn Error>> {
     conn.execute(
         "UPDATE applications
          SET cover_letter = COALESCE(?1, cover_letter), resume = COALESCE(?2, resume), status = COALESCE(?3, status)

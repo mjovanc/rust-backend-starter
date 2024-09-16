@@ -90,7 +90,7 @@ pub fn get_by_id(conn: &mut Connection, id: i64) -> Result<Option<Job>, Box<dyn 
     }
 }
 
-pub fn update(conn: &mut Connection, job: Job) -> Result<(), Box<dyn Error>> {
+pub fn update(conn: &mut Connection, id: i64, job: Job) -> Result<(), Box<dyn Error>> {
     conn.execute(
         "UPDATE jobs
          SET employer_id = COALESCE(?1, employer_id), title = COALESCE(?2, title), description = COALESCE(?3, description),

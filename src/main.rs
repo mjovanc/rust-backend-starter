@@ -19,6 +19,8 @@ use crate::utils::init_db::initialize_database;
 use crate::utils::{Pagination, ErrorResponse};
 use crate::models::{User, Job, Application, UserRole, EmploymentType, ApplicationStatus};
 use crate::routes::user_route;
+use crate::routes::job_route;
+use crate::routes::application_route;
 
 #[actix_web::main]
 async fn main() -> std::io::Result<()> {
@@ -41,13 +43,21 @@ async fn main() -> std::io::Result<()> {
                 email = "info@example.com"
             )),
         paths(
-            // Define your paths here, such as:
             user_route::get_users,
-            // user::get_user_by_id,
-            // job::get_jobs,
-            // job::get_job_by_id,
-            // application::get_applications,
-            // application::get_application_by_id,
+            user_route::get_user_by_id,
+            user_route::create_user,
+            user_route::update_user,
+            user_route::delete_user,
+            job_route::get_jobs,
+            job_route::get_job_by_id,
+            job_route::create_job,
+            job_route::update_job,
+            job_route::delete_job,
+            application_route::get_applications,
+            application_route::get_application_by_id,
+            application_route::create_application,
+            application_route::update_application,
+            application_route::delete_application,
         ),
         components(
             schemas(
@@ -84,7 +94,6 @@ async fn main() -> std::io::Result<()> {
         }
     }
 
-    // Initialize stores
     let user_store = Data::new(UserStore::default());
     let job_store = Data::new(JobStore::default());
     let application_store = Data::new(ApplicationStore::default());
