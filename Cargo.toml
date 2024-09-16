@@ -1,0 +1,26 @@
+[package]
+name = "rust-backend-starter"
+version = "0.1.0"
+edition = "2021"
+authors = ["Marcus Cvjeticanin <mjovanc@icloud.com>"]
+description = "A Rust Backend Boilerplate using Actix, SQLite, OpenAPI/Swagger etc."
+license = "MIT"
+repository = "https://github.com/mjovanc/rust-backend-starter"
+readme = "README.md"
+rust-version = "1.78.0"
+homepage = "https://njord.rs"
+keywords = ["actix", "rusqlite", "utopia", "backend"]
+
+[dependencies]
+actix-web = "4"
+actix-files = "0.6.5"
+actix-cors = "0.7.0"
+rusqlite = { version = "0.32.1", features = ["bundled"] }
+utoipa = { version = "4", features = ["actix_extras"] }
+utoipa-swagger-ui = { version = "6.0.0", features = ["actix-web"] }
+serde = { version = "1.0", features = ["derive"] }
+serde_json = "1.0"
+futures = { version = "0.3.30", features = [] }
+dotenv = "0.15"
+env_logger = "0.11.5"
+chrono = { version = "0.4", features = ["serde"] }
