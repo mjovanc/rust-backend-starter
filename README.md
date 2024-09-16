@@ -26,7 +26,7 @@ Follow these instructions to set up and run the project on your local machine.
 
 ### Prerequisites
 
-- **Rust**: Install [Rust](https://www.rust-lang.org/tools/install)
+- **Rust**: Install [Rust](https://www.rust-lang.org/tools/install) 1.78+
 - **SQLite**: Ensure SQLite is installed for local database use.
 
 ### Installation
@@ -60,21 +60,3 @@ Follow these instructions to set up and run the project on your local machine.
     ```
 
 The server should now be running at `http://localhost:8080`.
-
----
-
-## Project Structure
-
-```bash
-.
-├── src/
-│   ├── main.rs          # Entry point
-│   ├── config/          # Environment and configuration files
-│   ├── handlers/        # Route handlers
-│   ├── models/          # Data models
-│   ├── db/              # Database connection and queries
-│   ├── auth/            # JWT authentication logic
-│   └── utils/           # Helper functions
-├── .env                 # Environment variables
-├── Cargo.toml           # Rust project file
-└── README.md            # Project documentation

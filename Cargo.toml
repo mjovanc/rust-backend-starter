@@ -24,3 +24,4 @@ futures = { version = "0.3.30", features = [] }
 dotenv = "0.15"
 env_logger = "0.11.5"
 chrono = { version = "0.4", features = ["serde"] }
+log = "0.4.22"

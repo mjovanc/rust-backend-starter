@@ -1,10 +1,13 @@
+use std::fmt;
 use chrono::{DateTime, Utc};
+use rusqlite::{Error, ToSql};
+use rusqlite::types::{FromSql, FromSqlResult, ToSqlOutput, ValueRef};
 use serde::{Deserialize, Serialize};
 use utoipa::ToSchema;
 
 /// User object
 #[derive(Serialize, Deserialize, ToSchema, Clone, Debug)]
-pub(super) struct User {
+pub struct User {
     /// Table id for the User.
     #[schema(example = 1)]
     pub id: i64,
@@ -34,7 +37,7 @@ pub(super) struct User {
 
 /// Request to update existing `User` item.
 #[derive(Serialize, Deserialize, ToSchema, Clone, Debug)]
-pub(super) struct UserUpdateRequest {
+pub struct UserUpdateRequest {
     /// Optional new value for the `User` name.
     #[schema(example = "Jane Doe")]
     pub name: Option<String>,
@@ -56,4 +59,31 @@ pub enum UserRole {
     JobSeeker,
     #[schema(rename = "employer")]
     Employer,
+}
+
+impl ToSql for UserRole {
+    fn to_sql(&self) -> Result<ToSqlOutput, Error> {
+        Ok(ToSqlOutput::from(self.to_string()))
+    }
+}
+
+impl FromSql for UserRole {
+    fn column_result(value: ValueRef<'_>) -> FromSqlResult<Self> {
+        let s: String = value.as_str()?.to_string();
+        match s.as_str() {
+            "job_seeker" => Ok(UserRole::JobSeeker),
+            "employer" => Ok(UserRole::Employer),
+            _ => Err(rusqlite::types::FromSqlError::InvalidType),
+        }
+    }
+}
+
+impl fmt::Display for UserRole {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        let role_str = match self {
+            UserRole::JobSeeker => "job_seeker",
+            UserRole::Employer => "employer",
+        };
+        write!(f, "{}", role_str)
+    }
 }
