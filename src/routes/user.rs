@@ -4,11 +4,11 @@ use actix_web::web::{Data, Json, Path, Query, ServiceConfig};
 use rusqlite::Connection;
 use serde::Deserialize;
 use log::{error, info};
-use crate::db::application_db::get_by_id;
-use crate::db::user_db;
+use crate::db::application::get_by_id;
+use crate::db::user;
 use crate::models::{User, UserStore};
 use crate::models::user::UserUpdateRequest;
-use crate::utils::{ErrorResponse, Pagination};
+use crate::utils::{ErrorResponse, PaginationUser};
 
 #[derive(Deserialize)]
 pub struct UserQuery {
@@ -41,7 +41,7 @@ pub(crate) fn configure(store: Data<UserStore>) -> impl FnOnce(&mut ServiceConfi
         ("offset" = Option<usize>, Query, description = "Offset for pagination", example = 0),
     ),
     responses(
-        (status = 200, description = "List current user items with pagination metadata", body = Pagination<Vec<User>>),
+        (status = 200, description = "List current user items with pagination metadata", body = PaginationUser<Vec<User>>),
         (status = 401, description = "Unauthorized to get users", body = ErrorResponse, example = json!(ErrorResponse::Unauthorized(String::from("Missing API Key")))),
     ),
     security(
@@ -65,15 +65,15 @@ pub(super) async fn get_users(query: Query<UserQuery>) -> impl Responder {
     let limit = query.limit.unwrap_or(10) as i64;
     let offset = query.offset.unwrap_or(0) as i64;
 
-    let total_count = user_db::get_total_count(&mut conn).unwrap_or_else(|e| {
+    let total_count = user::get_total_count(&mut conn).unwrap_or_else(|e| {
         error!("Error getting total count from the database: {:?}", e);
         0
     });
 
-    match user_db::get_all(&mut conn, limit, offset) {
+    match user::get_all(&mut conn, limit, offset) {
         Ok(users) => {
             let page = (offset / limit) + 1;
-            let pagination = Pagination {
+            let pagination = PaginationUser {
                 page,
                 count: total_count,
                 items: users,
@@ -116,7 +116,7 @@ pub(super) async fn get_user_by_id(id: Path<i64>) -> impl Responder {
     let db_url = env::var("DATABASE_URL").unwrap_or_else(|_| "not set".to_string());
     let mut conn = Connection::open(&db_url).unwrap();
 
-    if let Ok(Some(user)) = user_db::get_by_id(&mut conn, id) {
+    if let Ok(Some(user)) = user::get_by_id(&mut conn, id) {
         HttpResponse::Ok().json(user)
     } else {
         HttpResponse::NotFound().body(format!("User with ID {} not found", id))
@@ -158,7 +158,7 @@ pub(super) async fn create_user(user: Json<UserUpdateRequest>) -> impl Responder
 
     let user = user.into_inner();
 
-    match user_db::create(&mut conn, user.clone()) {
+    match user::create(&mut conn, user.clone()) {
         Ok(_) => {
             info!("User created successfully: {:?}", user);
             HttpResponse::Created().json(user)
@@ -212,7 +212,7 @@ pub(super) async fn update_user(
     };
 
     // Retrieve the existing user to update
-    let existing_user = match user_db::get_by_id(&mut conn, id) {
+    let existing_user = match user::get_by_id(&mut conn, id) {
         Ok(Some(user)) => user,
         Ok(None) => return HttpResponse::NotFound().finish(),
         Err(e) => {
@@ -233,7 +233,7 @@ pub(super) async fn update_user(
     };
 
     // Call the update function
-    match user_db::update(&mut conn, id, updated_user) {
+    match user::update(&mut conn, id, updated_user) {
         Ok(_) => {
             info!("Updated user...");
             HttpResponse::Ok().finish()
@@ -272,7 +272,7 @@ pub(super) async fn delete_user(id: Path<i32>) -> impl Responder {
     let db_url = env::var("DATABASE_URL").unwrap_or_else(|_| "not set".to_string());
     let mut conn = Connection::open(&db_url).unwrap();
 
-    match user_db::delete(&mut conn, id) {
+    match user::delete(&mut conn, id) {
         Ok(_) => HttpResponse::Ok().finish(),
         Err(e) => {
             error!("Error deleting user with ID {}: {:?}", id, e);

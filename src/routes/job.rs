@@ -5,10 +5,10 @@ use chrono::Utc;
 use rusqlite::Connection;
 use serde::Deserialize;
 use log::{error, info};
-use crate::db::job_db;
+use crate::db::job;
 use crate::models::job::{Job, JobUpdateRequest, EmploymentType};
 use crate::models::JobStore;
-use crate::utils::{ErrorResponse, Pagination};
+use crate::utils::{ErrorResponse, PaginationJob};
 
 #[derive(Deserialize)]
 pub struct JobQuery {
@@ -41,7 +41,7 @@ pub(crate) fn configure(store: Data<JobStore>) -> impl FnOnce(&mut ServiceConfig
         ("offset" = Option<usize>, Query, description = "Offset for pagination", example = 0),
     ),
     responses(
-        (status = 200, description = "List current job items with pagination metadata", body = Pagination<Vec<Job>>),
+        (status = 200, description = "List current job items with pagination metadata", body = PaginationJob<Vec<Job>>),
         (status = 401, description = "Unauthorized to get jobs", body = ErrorResponse, example = json!(ErrorResponse::Unauthorized(String::from("Missing API Key")))),
     ),
     security(
@@ -65,15 +65,15 @@ pub(super) async fn get_jobs(query: Query<JobQuery>) -> impl Responder {
     let limit = query.limit.unwrap_or(10) as i64;
     let offset = query.offset.unwrap_or(0) as i64;
 
-    let total_count = job_db::get_total_count(&mut conn).unwrap_or_else(|e| {
+    let total_count = job::get_total_count(&mut conn).unwrap_or_else(|e| {
         error!("Error getting total count from the database: {:?}", e);
         0
     });
 
-    match job_db::get_all(&mut conn, limit, offset) {
+    match job::get_all(&mut conn, limit, offset) {
         Ok(jobs) => {
             let page = (offset / limit) + 1;
-            let pagination = Pagination {
+            let pagination = PaginationJob {
                 page,
                 count: total_count,
                 items: jobs,
@@ -116,7 +116,7 @@ pub(super) async fn get_job_by_id(id: Path<i64>) -> impl Responder {
     let db_url = env::var("DATABASE_URL").unwrap_or_else(|_| "not set".to_string());
     let mut conn = Connection::open(&db_url).unwrap();
 
-    if let Ok(Some(job)) = job_db::get_by_id(&mut conn, id) {
+    if let Ok(Some(job)) = job::get_by_id(&mut conn, id) {
         HttpResponse::Ok().json(job)
     } else {
         HttpResponse::NotFound().json(ErrorResponse::NotFound(format!("Job with ID {} not found", id)))
@@ -158,7 +158,7 @@ pub(super) async fn create_job(job: Json<Job>) -> impl Responder {
 
     let job = job.into_inner();
 
-    match job_db::create(&mut conn, job.clone()) {
+    match job::create(&mut conn, job.clone()) {
         Ok(_) => {
             info!("Job created successfully: {:?}", job);
             HttpResponse::Created().json(job)
@@ -213,7 +213,7 @@ pub(super) async fn update_job(
     };
 
     // Retrieve the existing job to update
-    let existing_job = match job_db::get_by_id(&mut conn, id) {
+    let existing_job = match job::get_by_id(&mut conn, id) {
         Ok(Some(job)) => job,
         Ok(None) => return HttpResponse::NotFound().finish(),
         Err(e) => {
@@ -234,7 +234,7 @@ pub(super) async fn update_job(
         updated_at: Utc::now(),
     };
 
-    match job_db::update(&mut conn, id, updated_job.clone()) {
+    match job::update(&mut conn, id, updated_job.clone()) {
         Ok(_) => HttpResponse::Ok().json(updated_job),
         Err(e) => {
             error!("Error updating job with ID {}: {:?}", id, e);
@@ -270,7 +270,7 @@ pub(super) async fn delete_job(id: Path<i64>) -> impl Responder {
     let db_url = env::var("DATABASE_URL").unwrap_or_else(|_| "not set".to_string());
     let mut conn = Connection::open(&db_url).unwrap();
 
-    match job_db::delete(&mut conn, id) {
+    match job::delete(&mut conn, id) {
         Ok(_) => HttpResponse::NoContent().finish(),
         Err(e) => {
             error!("Error deleting job with ID {}: {:?}", id, e);

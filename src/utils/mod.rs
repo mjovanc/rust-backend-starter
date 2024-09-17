@@ -1,14 +1,31 @@
 use serde::{Deserialize, Serialize};
 use utoipa::ToSchema;
+use crate::models::{User, Job, Application};
 
 pub mod init_db;
 
-/// Pagination metadata
+/// Pagination User
 #[derive(Serialize, Deserialize, Clone, ToSchema)]
-pub struct Pagination<T> {
+pub struct PaginationUser {
     pub page: i64,
     pub count: i64,
-    pub items: Vec<T>,
+    pub items: Vec<User>,
+}
+
+/// Pagination Job
+#[derive(Serialize, Deserialize, Clone, ToSchema)]
+pub struct PaginationJob {
+    pub page: i64,
+    pub count: i64,
+    pub items: Vec<Job>,
+}
+
+/// Pagination Application
+#[derive(Serialize, Deserialize, Clone, ToSchema)]
+pub struct PaginationApplication {
+    pub page: i64,
+    pub count: i64,
+    pub items: Vec<Application>,
 }
 
 /// API endpoint error responses

@@ -16,11 +16,9 @@ use utoipa::{
 use utoipa_swagger_ui::SwaggerUi;
 use crate::models::{ApplicationStore, JobStore, UserStore};
 use crate::utils::init_db::initialize_database;
-use crate::utils::{Pagination, ErrorResponse};
+use crate::utils::{PaginationUser, PaginationJob, PaginationApplication, ErrorResponse};
 use crate::models::{User, Job, Application, UserRole, EmploymentType, ApplicationStatus};
-use crate::routes::user_route;
-use crate::routes::job_route;
-use crate::routes::application_route;
+use crate::routes::{user, job, application};
 
 #[actix_web::main]
 async fn main() -> std::io::Result<()> {
@@ -43,21 +41,21 @@ async fn main() -> std::io::Result<()> {
                 email = "info@example.com"
             )),
         paths(
-            user_route::get_users,
-            user_route::get_user_by_id,
-            user_route::create_user,
-            user_route::update_user,
-            user_route::delete_user,
-            job_route::get_jobs,
-            job_route::get_job_by_id,
-            job_route::create_job,
-            job_route::update_job,
-            job_route::delete_job,
-            application_route::get_applications,
-            application_route::get_application_by_id,
-            application_route::create_application,
-            application_route::update_application,
-            application_route::delete_application,
+            user::get_users,
+            user::get_user_by_id,
+            user::create_user,
+            user::update_user,
+            user::delete_user,
+            job::get_jobs,
+            job::get_job_by_id,
+            job::create_job,
+            job::update_job,
+            job::delete_job,
+            application::get_applications,
+            application::get_application_by_id,
+            application::create_application,
+            application::update_application,
+            application::delete_application,
         ),
         components(
             schemas(
@@ -67,9 +65,9 @@ async fn main() -> std::io::Result<()> {
                 EmploymentType,
                 Application,
                 ApplicationStatus,
-                Pagination<User>,
-                Pagination<Job>,
-                Pagination<Application>,
+                PaginationUser,
+                PaginationJob,
+                PaginationApplication,
                 ErrorResponse
             )
         ),
@@ -117,7 +115,7 @@ async fn main() -> std::io::Result<()> {
             .configure(|cfg| {
                 cfg.service(web::scope("/v1")
                     .configure(|scope| {
-                        user_route::configure(user_store.clone())(scope);
+                        user::configure(user_store.clone())(scope);
                     }));
             })
             .service(

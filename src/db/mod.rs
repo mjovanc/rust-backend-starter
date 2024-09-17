@@ -1,3 +1,3 @@
-pub mod user_db;
-pub mod job_db;
-pub mod application_db;
+pub mod user;
+pub mod job;
+pub mod application;

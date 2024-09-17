@@ -5,10 +5,10 @@ use chrono::Utc;
 use rusqlite::Connection;
 use serde::Deserialize;
 use log::{error, info};
-use crate::db::application_db;
+use crate::db::application;
 use crate::models::application::{Application, ApplicationUpdateRequest};
 use crate::models::ApplicationStore;
-use crate::utils::{ErrorResponse, Pagination};
+use crate::utils::{ErrorResponse, PaginationApplication};
 use utoipa::ToSchema;
 
 /// Query parameters for pagination
@@ -43,7 +43,7 @@ pub(crate) fn configure(store: Data<ApplicationStore>) -> impl FnOnce(&mut Servi
         ("offset" = Option<usize>, Query, description = "Offset for pagination", example = 0),
     ),
     responses(
-        (status = 200, description = "List of applications with pagination metadata", body = Pagination<Application>),
+        (status = 200, description = "List of applications with pagination metadata", body = PaginationApplication<Application>),
         (status = 401, description = "Unauthorized to get applications", body = ErrorResponse, example = json!(ErrorResponse::Unauthorized(String::from("Missing API Key")))),
         (status = 500, description = "Internal server error", body = ErrorResponse)
     ),
@@ -67,15 +67,15 @@ pub async fn get_applications(query: Query<ApplicationQuery>) -> impl Responder 
     let limit = query.limit.unwrap_or(10) as i64;
     let offset = query.offset.unwrap_or(0) as i64;
 
-    let total_count = application_db::get_total_count(&mut conn).unwrap_or_else(|e| {
+    let total_count = application::get_total_count(&mut conn).unwrap_or_else(|e| {
         error!("Error getting total count from the database: {:?}", e);
         0
     });
 
-    match application_db::get_all(&mut conn, limit, offset) {
+    match application::get_all(&mut conn, limit, offset) {
         Ok(applications) => {
             let page = (offset / limit) + 1;
-            let pagination = Pagination {
+            let pagination = PaginationApplication {
                 page,
                 count: total_count,
                 items: applications,
@@ -118,7 +118,7 @@ pub async fn get_application_by_id(id: Path<i64>) -> impl Responder {
     let db_url = env::var("DATABASE_URL").unwrap_or_else(|_| "not set".to_string());
     let mut conn = Connection::open(&db_url).unwrap();
 
-    match application_db::get_by_id(&mut conn, id) {
+    match application::get_by_id(&mut conn, id) {
         Ok(Some(application)) => HttpResponse::Ok().json(application),
         Ok(None) => HttpResponse::NotFound().json(ErrorResponse::NotFound(format!("Application with ID {} not found", id))),
         Err(e) => {
@@ -165,7 +165,7 @@ pub async fn create_application(application: Json<Application>) -> impl Responde
 
     let application = application.into_inner();
 
-    match application_db::create(&mut conn, application.clone()) {
+    match application::create(&mut conn, application.clone()) {
         Ok(_) => {
             info!("Application created successfully: {:?}", application);
             HttpResponse::Created().json(application)
@@ -220,7 +220,7 @@ pub async fn update_application(
     };
 
     // Retrieve the existing application to update
-    let existing_application = match application_db::get_by_id(&mut conn, id) {
+    let existing_application = match application::get_by_id(&mut conn, id) {
         Ok(Some(application)) => application,
         Ok(None) => return HttpResponse::NotFound().json(ErrorResponse::NotFound(format!("Application with ID {} not found", id))),
         Err(e) => {
@@ -242,7 +242,7 @@ pub async fn update_application(
         applied_at: existing_application.applied_at,
     };
 
-    match application_db::update(&mut conn, id, updated_application.clone()) {
+    match application::update(&mut conn, id, updated_application.clone()) {
         Ok(_) => HttpResponse::Ok().json(updated_application),
         Err(e) => {
             error!("Error updating application with ID {}: {:?}", id, e);
@@ -278,7 +278,7 @@ pub async fn delete_application(id: Path<i64>) -> impl Responder {
     let db_url = env::var("DATABASE_URL").unwrap_or_else(|_| "not set".to_string());
     let mut conn = Connection::open(&db_url).unwrap();
 
-    match application_db::delete(&mut conn, id) {
+    match application::delete(&mut conn, id) {
         Ok(_) => HttpResponse::NoContent().finish(),
         Err(e) => {
             error!("Error deleting application with ID {}: {:?}", id, e);
