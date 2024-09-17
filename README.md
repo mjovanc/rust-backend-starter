@@ -10,9 +10,9 @@ This project serves as a starting point for building a robust backend in Rust, f
 
 - **Actix Web**: A powerful and fast web framework for Rust.
 - **SQLite**: Lightweight, embedded SQL database for simple data persistence.
-- **OpenAPI (Swagger)**: Auto-generate API documentation.
-- **JWT Authentication**: Secure user authentication with JSON Web Tokens.
-- **Environment Configuration**: Using `dotenvy` for managing environment variables.
+- **OpenAPI (Swagger)**: Auto-generate API documentation using Utopia library.
+- **JWT Authentication**: Secure user authentication with JSON Web Tokens. NOT DONE.
+- **Environment Configuration**: Using `dotenv` for managing environment variables.
 - **Serde**: Easy serialization and deserialization of data structures.
 - **Logging**: Integrated logging with `env_logger`.
 - **CORS**: Cross-Origin Resource Sharing support for secure frontend-backend interactions.
@@ -49,8 +49,7 @@ Follow these instructions to set up and run the project on your local machine.
    Create a `.env` file in the root directory and configure your environment variables:
 
     ```env
-    DATABASE_URL=sqlite://data.db
-    SECRET_KEY=your_jwt_secret_key
+    DATABASE_URL=/Users/mjovanc/backend.db
     ```
 
 5. Start the development server:
@@ -60,3 +59,22 @@ Follow these instructions to set up and run the project on your local machine.
     ```
 
 The server should now be running at `http://localhost:8080`.
+
+### Build and Run using Docker
+
+This guide will walk you through building and running the backend in a Docker container.
+
+#### Prerequisites
+
+- [Docker](https://www.docker.com/get-started) installed on your machine.
+
+#### Building the Docker Image
+
+1. Open your terminal.
+2. Navigate to the directory containing your `Dockerfile`.
+3. Run the following command to build your Docker image:
+
+   ```bash
+   docker build -t rust_backend_starter .
+   docker run -p 8080:8080 -v /path/to/local/sqlite/data:/data rust_backend_starter
+   ```

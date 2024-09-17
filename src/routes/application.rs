@@ -11,7 +11,6 @@ use crate::models::ApplicationStore;
 use crate::utils::{ErrorResponse, PaginationApplication};
 use utoipa::ToSchema;
 
-/// Query parameters for pagination
 #[derive(Deserialize, ToSchema)]
 pub struct ApplicationQuery {
     pub limit: Option<i64>,
