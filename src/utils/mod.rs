@@ -1,7 +1,5 @@
-use rusqlite::Connection;
 use serde::{Deserialize, Serialize};
 use utoipa::ToSchema;
-use crate::models::User;
 
 pub mod init_db;
 

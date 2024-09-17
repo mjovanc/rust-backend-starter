@@ -49,11 +49,5 @@ pub fn initialize_database() -> Result<()> {
         "
     )?;
 
-    // Optionally, insert initial data
-    /*conn.execute(
-        "INSERT INTO User (id, name, email, password, role, created_at, updated_at) VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7)",
-        (1, "John Doe", "john.doe@example.com", "hashed_password_here", "job_seeker", Utc::now().to_rfc3339(), Utc::now().to_rfc3339())
-    )?;*/
-
     Ok(())
 }

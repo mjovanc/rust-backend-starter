@@ -236,20 +236,13 @@ pub async fn update_application(
         id: existing_application.id,
         job_seeker_id: existing_application.job_seeker_id,
         job_id: existing_application.job_id,
-        cover_letter: application_update_request.cover_letter.clone().unwrap_or_else(|| existing_application.cover_letter.clone()),
-        resume: application_update_request.resume.clone().unwrap_or_else(|| existing_application.resume.clone()),
-        status: application_update_request.status.clone().unwrap_or_else(|| existing_application.status.clone()),
+        cover_letter: application_update_request.cover_letter.clone(),
+        resume: application_update_request.resume.clone(),
+        status: application_update_request.status.clone().unwrap_or_else(|| existing_application.status),
         applied_at: existing_application.applied_at,
     };
 
-    // You should call `application_db::update` with `ApplicationUpdateRequest`, not `Application`
-    let update_request = ApplicationUpdateRequest {
-        cover_letter: application_update_request.cover_letter,
-        resume: application_update_request.resume,
-        status: application_update_request.status,
-    };
-
-    match application_db::update(&mut conn, id, updated_application) {
+    match application_db::update(&mut conn, id, updated_application.clone()) {
         Ok(_) => HttpResponse::Ok().json(updated_application),
         Err(e) => {
             error!("Error updating application with ID {}: {:?}", id, e);

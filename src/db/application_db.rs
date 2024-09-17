@@ -92,7 +92,7 @@ pub fn update(conn: &mut Connection, id: i64, application: Application) -> Resul
         params![
             application.cover_letter,
             application.resume,
-            application.status.map(|s| s as i32),
+            application.status as i32,
             id,
         ],
     )?;
