@@ -20,7 +20,7 @@ COPY --from=builder /app/target/release/rust-backend-starter /usr/local/bin/rust
 WORKDIR /data
 VOLUME ["/data"]
 
-ENTRYPOINT ["/usr/local/bin/my_actix_app"]
+ENTRYPOINT ["/usr/local/bin/rust-backend-starter"]
 
 EXPOSE 8080
 
